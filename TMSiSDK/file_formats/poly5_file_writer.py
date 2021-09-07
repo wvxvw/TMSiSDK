@@ -27,7 +27,6 @@ TMSiSDK: Poly5 File Writer
 
 '''
 import sys
-sys.path.append("../TMSiSDK")
 
 from datetime import datetime
 
