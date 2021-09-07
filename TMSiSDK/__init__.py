@@ -27,7 +27,7 @@ limitations under the License.
 from os.path import join, dirname, realpath
 
 TMSiSDK_dir = dirname(realpath(__file__)) # directory of this file
-configs_dir = join(dir, 'configs')
+configs_dir = join(TMSiSDK_dir, 'configs')
 
 def get_config(config_name):
 	
