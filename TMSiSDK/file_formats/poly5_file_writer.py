@@ -94,8 +94,8 @@ class Poly5Writer:
             self._sampling_thread.start()
         except OSError as e:
             print(e)
-            assert(False)
-        finally:
+            raise TMSiError(TMSiErrorCode.file_writer_error)
+        except:
             raise TMSiError(TMSiErrorCode.file_writer_error)
 
     def close(self):
@@ -240,8 +240,8 @@ class ConsumerThread(threading.Thread):
                             self._fp.seek(0, os.SEEK_END)
                 except OSError as e:
                     print(e)
-                    assert(False)
-                finally:
+                    raise TMSiError(TMSiErrorCode.file_writer_error)
+                except:
                     raise TMSiError(TMSiErrorCode.file_writer_error)
 
             time.sleep(0.01)
