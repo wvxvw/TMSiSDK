@@ -27,7 +27,6 @@ TMSiSDK: SAGA Device Interface
 
 '''
 import sys
-sys.path.append(".../TMSiSDK")
 
 from .saga_types import *
 from ...error import TMSiError, TMSiErrorCode
@@ -47,7 +46,7 @@ import warnings
 import tkinter as tk
 from tkinter import messagebox
 
-from TMSiSDK import sample_data, sample_data_server
+from ... import sample_data, sample_data_server
 
 from .xml_saga_config import *
 

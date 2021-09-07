@@ -24,4 +24,12 @@ limitations under the License.
 @version: 2021-06-07
 
 '''
+from os.path import join, dirname, realpath
 
+TMSiSDK_dir = dirname(realpath(__file__)) # directory of this file
+configs_dir = join(dir, 'configs')
+
+def get_config(config_name):
+	
+	config_fname = join(configs_dir, config_name + '.xml')
+	return config_fname

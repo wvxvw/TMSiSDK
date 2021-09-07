@@ -37,9 +37,9 @@ import queue
 import struct
 import time
 
-from error import TMSiError, TMSiErrorCode
-import sample_data
-import sample_data_server
+from ..error import TMSiError, TMSiErrorCode
+from .. import sample_data
+from .. import sample_data_server
 
 _QUEUE_SIZE = 1000
 

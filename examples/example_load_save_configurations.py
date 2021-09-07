@@ -34,6 +34,7 @@ sys.path.append("../")
 from TMSiSDK import tmsi_device
 from TMSiSDK.device import DeviceInterfaceType, ChannelType, DeviceState
 from TMSiSDK.error import TMSiError, TMSiErrorCode, DeviceErrorLookupTable
+from TMSiSDK import get_config
 
 try:
     # Initialize the TMSi-SDK first before starting using it
@@ -49,9 +50,10 @@ try:
     # of this configuration
     print('Loading a configuration with one active UNI-channel : \n')
     if dev.config.num_channels<64:
-        dev.load_config("./configs/saga_config_minimal32.xml")
+        cfg = get_config("saga_config_minimal32")
     else:
-        dev.load_config("./configs/saga_config_minimal.xml")
+        cfg = get_config("saga_config_minimal")
+    dev.load_config(cfg)
     
     for idx, ch in enumerate(dev.channels):
          print('[{0}] : [{1}] in [{2}]'.format(idx, ch.name, ch.unit_name))

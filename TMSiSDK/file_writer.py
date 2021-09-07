@@ -29,8 +29,8 @@ TMSiSDK: File Writer Interface
 
 from enum import Enum
 
-from TMSiSDK.error import TMSiError, TMSiErrorCode
-from TMSiSDK import file_formats
+from .error import TMSiError, TMSiErrorCode
+from . import file_formats
 
 class FileFormat(Enum):
     none = 0

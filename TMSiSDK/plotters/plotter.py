@@ -35,15 +35,14 @@ import queue
 from copy import copy
 
 import sys
-sys.path.append("../TMSiSDK")
 
 
-import tmsi_device
-import sample_data_server
-from plotters.plotter_gui import Ui_MainWindow 
+from .. import tmsi_device
+from .. import sample_data_server
+from ..plotters.plotter_gui import Ui_MainWindow 
 
 
-from device import DeviceInterfaceType, ChannelType
+from ..device import DeviceInterfaceType, ChannelType
 
 
 class RealTimePlot(QtWidgets.QMainWindow, Ui_MainWindow):

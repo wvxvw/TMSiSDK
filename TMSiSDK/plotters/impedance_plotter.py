@@ -27,6 +27,7 @@ TMSiSDK: Plotter object that displays impedance values in real-time
 
 '''
 
+from os.path import join, dirname, realpath
 from PySide2 import QtGui, QtCore, QtWidgets
 import numpy as np
 import pyqtgraph as pg
@@ -36,13 +37,12 @@ import pandas as pd
 import math
 
 import sys
-sys.path.append("../TMSiSDK")
 
-import tmsi_device
-import sample_data_server
-import sample_data
+from .. import tmsi_device
+from .. import sample_data_server
+from .. import sample_data
 
-from device import DeviceInterfaceType, MeasurementType
+from ..device import DeviceInterfaceType, MeasurementType
 
 
 class ImpedancePlot(pg.GraphicsLayoutWidget):
@@ -129,7 +129,10 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
             
         if layout=='head':
             #read channel locations
-            chLocs=pd.read_csv('EEGchannelsTMSi.txt', sep="\t", header=None)       
+            dir = dirname(realpath(__file__)) # directory of this file
+            chPath = join(dir, 'resources', 'EEGchannelsTMSi.txt')
+
+            chLocs=pd.read_csv(chPath, sep="\t", header=None)       
             chLocs.columns=['name', 'radius', 'theta']
             
             #Plot a circle
