@@ -87,9 +87,13 @@ class LSLWriter:
             for idx, ch in enumerate(self.device.channels): # active channels
                  chn = chns.append_child("channel")
                  chn.append_child_value("label", ch.name)
+                 chn.append_child_value("index", idx)
                  chn.append_child_value("unit", ch.unit_name)
                  chn.append_child_value("type", str(ch.type).replace('ChannelType.', ''))
             info.desc().append_child_value("manufacturer", "TMSi")
+            sync = info.desc().append_child("synchronization")
+            sync.append_child_value("offset_mean", 0.0335) # measured while dock/usb connected
+            sync.append_child_value("offset_std", 0.0008) # jitter AFTER jitter correction by pyxdf
 
             # start sampling data and pushing to LSL
             self._outlet = StreamOutlet(info, self._num_sample_sets_per_sample_data_block)
