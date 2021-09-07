@@ -37,6 +37,7 @@ class FileFormat(Enum):
     poly5 = 1
     edfplus = 2
     gdf = 3
+    lsl = 4
 
 class FileWriter:
     """ <FileWriter> implements a file-writer for writing sample-data, captured
@@ -50,7 +51,7 @@ class FileWriter:
             measurement-data must be written.
     """
     def __init__(self, data_format_type, filename):
-        if (data_format_type == FileFormat.poly5):
+        if (data_format_type in [FileFormat.poly5, FileFormat.lsl]):
             self._data_format_type = data_format_type
             self._file_writer = file_formats.Poly5Writer(filename)
         else:

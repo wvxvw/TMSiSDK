@@ -26,4 +26,5 @@ limitations under the License.
 '''
 
 from .poly5_file_writer import *
+from .lsl_stream_writer import LSLWriter
 
