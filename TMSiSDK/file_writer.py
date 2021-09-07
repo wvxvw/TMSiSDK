@@ -51,9 +51,12 @@ class FileWriter:
             measurement-data must be written.
     """
     def __init__(self, data_format_type, filename):
-        if (data_format_type in [FileFormat.poly5, FileFormat.lsl]):
+        if (data_format_type == FileFormat.poly5):
             self._data_format_type = data_format_type
             self._file_writer = file_formats.Poly5Writer(filename)
+        if (data_format_type == FileFormat.lsl):
+            self._data_format_type = data_format_type
+            self._file_writer = file_formats.LSLWriter(filename)
         else:
             print("Unsupported data format")
             raise TMSiError(TMSiErrorCode.api_incorrect_argument)
