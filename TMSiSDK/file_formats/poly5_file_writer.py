@@ -92,7 +92,10 @@ class Poly5Writer:
 
             self._sampling_thread = ConsumerThread(self, name='poly5-writer : dev-id-' + str(self.device.id))
             self._sampling_thread.start()
-        except:
+        except OSError as e:
+            print(e)
+            assert(False)
+        finally:
             raise TMSiError(TMSiErrorCode.file_writer_error)
 
     def close(self):
@@ -235,7 +238,10 @@ class ConsumerThread(threading.Thread):
 
                             # Go back to end of file
                             self._fp.seek(0, os.SEEK_END)
-                except:
+                except OSError as e:
+                    print(e)
+                    assert(False)
+                finally:
                     raise TMSiError(TMSiErrorCode.file_writer_error)
 
             time.sleep(0.01)
