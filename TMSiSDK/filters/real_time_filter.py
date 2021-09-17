@@ -28,10 +28,9 @@ TMSiSDK: Real-time filter that can be applied to incoming data
 '''
 
 import sys
-sys.path.append("../")
 
-from TMSiSDK import sample_data_server
-from TMSiSDK.device import ChannelType
+from .. import sample_data_server
+from ..device import ChannelType
 
 import numpy as np
 import queue

@@ -27,7 +27,7 @@ TMSiSDK: Sample Data Server module
 
 '''
 
-from TMSiSDK import settings
+from . import settings
 
 class SampleDataConsumer:
     """ Local class which identifies which consumer registered for what device

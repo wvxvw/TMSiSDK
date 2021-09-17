@@ -35,15 +35,14 @@ import queue
 from copy import copy
 
 import sys
-sys.path.append("../TMSiSDK")
 
 
-import tmsi_device
-import sample_data_server
-from plotters.plotter_gui import Ui_MainWindow 
+from .. import tmsi_device
+from .. import sample_data_server
+from ..plotters.plotter_gui import Ui_MainWindow 
 
 
-from device import DeviceInterfaceType, ChannelType
+from ..device import DeviceInterfaceType, ChannelType
 
 
 class RealTimePlot(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -102,13 +101,13 @@ class RealTimePlot(QtWidgets.QMainWindow, Ui_MainWindow):
         self._downsampling_factor = int(self.sample_rate / 500)
         
         # Set channel list checkboxes
-        self._gridbox = QtGui.QGridLayout()
+        self._gridbox = QtWidgets.QGridLayout()
         self.channel_list_groupbox.setLayout(self._gridbox)
         
         # Create checkboxes for the active channels so that they can be selected
         self._checkboxes = []
         for i in range(self.active_channels - 2):
-            _checkBox = QtGui.QCheckBox(self.device.channels[i].name)
+            _checkBox = QtWidgets.QCheckBox(self.device.channels[i].name)
             if i in self._channel_selection:
                 _checkBox.setChecked(True)
             self._gridbox.addWidget(_checkBox, i%32, np.floor(i/32))

@@ -29,11 +29,11 @@ TMSiSDK : Starting module to instantiate <Device>-objects of TMSi measurement sy
 
 from enum import Enum
 
-from TMSiSDK.error import TMSiError, TMSiErrorCode
-from TMSiSDK.device import DeviceInterfaceType
-from TMSiSDK.devices.saga.saga_device import SagaDevice
+from .error import TMSiError, TMSiErrorCode
+from .device import DeviceInterfaceType
+from .devices.saga.saga_device import SagaDevice
 
-from TMSiSDK import settings
+from . import settings
 
 class DeviceType(Enum):
     none = 0

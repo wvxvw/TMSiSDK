@@ -29,14 +29,15 @@ TMSiSDK: File Writer Interface
 
 from enum import Enum
 
-from TMSiSDK.error import TMSiError, TMSiErrorCode
-from TMSiSDK import file_formats
+from .error import TMSiError, TMSiErrorCode
+from . import file_formats
 
 class FileFormat(Enum):
     none = 0
     poly5 = 1
     edfplus = 2
     gdf = 3
+    lsl = 4
 
 class FileWriter:
     """ <FileWriter> implements a file-writer for writing sample-data, captured
@@ -53,6 +54,9 @@ class FileWriter:
         if (data_format_type == FileFormat.poly5):
             self._data_format_type = data_format_type
             self._file_writer = file_formats.Poly5Writer(filename)
+        if (data_format_type == FileFormat.lsl):
+            self._data_format_type = data_format_type
+            self._file_writer = file_formats.LSLWriter(filename)
         else:
             print("Unsupported data format")
             raise TMSiError(TMSiErrorCode.api_incorrect_argument)

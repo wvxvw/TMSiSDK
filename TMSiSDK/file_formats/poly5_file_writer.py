@@ -27,7 +27,6 @@ TMSiSDK: Poly5 File Writer
 
 '''
 import sys
-sys.path.append("../TMSiSDK")
 
 from datetime import datetime
 
@@ -37,9 +36,9 @@ import queue
 import struct
 import time
 
-from error import TMSiError, TMSiErrorCode
-import sample_data
-import sample_data_server
+from ..error import TMSiError, TMSiErrorCode
+from .. import sample_data
+from .. import sample_data_server
 
 _QUEUE_SIZE = 1000
 
@@ -93,6 +92,9 @@ class Poly5Writer:
 
             self._sampling_thread = ConsumerThread(self, name='poly5-writer : dev-id-' + str(self.device.id))
             self._sampling_thread.start()
+        except OSError as e:
+            print(e)
+            raise TMSiError(TMSiErrorCode.file_writer_error)
         except:
             raise TMSiError(TMSiErrorCode.file_writer_error)
 
@@ -236,6 +238,9 @@ class ConsumerThread(threading.Thread):
 
                             # Go back to end of file
                             self._fp.seek(0, os.SEEK_END)
+                except OSError as e:
+                    print(e)
+                    raise TMSiError(TMSiErrorCode.file_writer_error)
                 except:
                     raise TMSiError(TMSiErrorCode.file_writer_error)
 
