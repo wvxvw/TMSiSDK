@@ -42,6 +42,7 @@ from TMSiSDK import plotters
 from TMSiSDK.device import DeviceInterfaceType, DeviceState
 from TMSiSDK.file_writer import FileWriter, FileFormat
 from TMSiSDK.error import TMSiError, TMSiErrorCode, DeviceErrorLookupTable
+from TMSiSDK import get_config
 
 
 try:
@@ -57,9 +58,10 @@ try:
     # Load the EEG channel set and configuration
     print("load EEG config")
     if dev.config.num_channels<64:
-        dev.load_config("./configs/saga_config_EEG32.xml")
+        cfg = get_config("saga_config_EEG32")
     else:
-        dev.load_config("./configs/saga_config_EEG64.xml")
+        cfg = get_config("saga_config_EEG64")
+    dev.load_config(cfg)
     
     
     # Check if there is already a plotter application in existence

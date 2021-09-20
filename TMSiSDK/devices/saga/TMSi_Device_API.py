@@ -29,7 +29,7 @@ TMSiSDK: SAGA Device API protocol definitions VERSION 1.4
 
 from ctypes import *
 from sys import platform
-import os.path
+import os
 import pdb
 from array import *
 
@@ -41,8 +41,9 @@ DeviceHandle = c_void_p
 TMSiDeviceHandle = DeviceHandle(0)
 
 if platform == "linux" or platform == "linux2":
+
     so_name = "libTMSiSagaDeviceLib.so"
-    soabspath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + so_name
+    soabspath = os.path.sep + os.path.join('usr', 'lib', so_name)
     dlclose_func = cdll.LoadLibrary('').dlclose
     dlclose_func.argtypes = [c_void_p]
 
