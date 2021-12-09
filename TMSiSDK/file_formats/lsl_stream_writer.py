@@ -1,5 +1,5 @@
 '''
-Copyright 2021 Jonh Veillette (https://gitlab.com/john-veillette)
+Copyright 2021 John Veillette (https://gitlab.com/john-veillette)
 Copyright 2021 Twente Medical Systems international B.V., Oldenzaal The Netherlands
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,7 @@ import time
 from ..error import TMSiError, TMSiErrorCode
 from .. import sample_data_server
 from pylsl import StreamInfo, StreamOutlet, local_clock
+from ..device import ChannelType
 
 
 class LSLConsumer:
@@ -110,19 +111,22 @@ class LSLWriter:
                 self._num_channels,
                 self._sample_rate,
                 'float32',
-                'tmsi-' + str(self.device.id)
-                )
+                'tmsi-' + str(self.device.info.dr_serial_number), 
+                ) 
             chns = info.desc().append_child("channels")
             for idx, ch in enumerate(self.device.channels): # active channels
                  chn = chns.append_child("channel")
                  chn.append_child_value("label", ch.name)
-                 chn.append_child_value("index", idx)
+                 chn.append_child_value("index", str(idx))
                  chn.append_child_value("unit", ch.unit_name)
-                 chn.append_child_value("type", str(ch.type).replace('ChannelType.', ''))
+                 if (ch.type.value == ChannelType.UNI.value) and not ch._DeviceChannel__name=='CREF':
+                     chn.append_child_value("type", 'EEG')
+                 else:
+                     chn.append_child_value("type", str(ch.type).replace('ChannelType.', ''))
             info.desc().append_child_value("manufacturer", "TMSi")
             sync = info.desc().append_child("synchronization")
-            sync.append_child_value("offset_mean", 0.0335) # measured while dock/usb connected
-            sync.append_child_value("offset_std", 0.0008) # jitter AFTER jitter correction by pyxdf
+            sync.append_child_value("offset_mean", str(0.0335)) # measured while dock/usb connected
+            sync.append_child_value("offset_std", str(0.0008)) # jitter AFTER jitter correction by pyxdf
 
             # start sampling data and pushing to LSL
             self._outlet = StreamOutlet(info, self._num_sample_sets_per_sample_data_block)
@@ -136,7 +140,7 @@ class LSLWriter:
     def close(self):
 
         print("LSLWriter-close")
-        sample_data_server.unregisterConsumer(self._consumer)
+        sample_data_server.unregisterConsumer(self.device.id, self._consumer)
         # let garbage collector take care of destroying LSL outlet
         self._consumer = None
         self._outlet = None

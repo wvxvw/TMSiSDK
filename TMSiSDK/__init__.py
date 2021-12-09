@@ -21,8 +21,6 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-@version: 2021-06-07
-
 '''
 from os.path import join, dirname, realpath
 

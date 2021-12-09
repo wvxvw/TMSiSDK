@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: module for SDK 'locally' used settings
 
-@version: 2021-06-07
-
 '''
 
 def _initialize():

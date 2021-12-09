@@ -21,9 +21,8 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-@version: 2021-06-07
-
 '''
 
 from .plotter import RealTimePlot
 from .impedance_plotter import ImpedancePlot
+from .plotter_hd_emg import HDEMGPlot

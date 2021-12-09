@@ -25,8 +25,6 @@ Example : This example shows how to change the Base Sample Rate property of
             SAGA, as well as how the active sample rate of individual channels 
             can be changed.
 
-@version: 2021-06-07
-
 '''
 import sys
 sys.path.append("../")

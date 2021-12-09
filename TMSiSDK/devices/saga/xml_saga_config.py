@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Reading/Writing SAGA configuration via XML
 
-@version: 2021-06-07
-
 '''
 
 from xml.dom import minidom

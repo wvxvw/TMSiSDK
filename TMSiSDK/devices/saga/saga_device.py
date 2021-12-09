@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: SAGA Device Interface 
 
-@version: 2021-06-07
-
 '''
 import sys
 
@@ -42,6 +40,7 @@ import threading
 import time
 import queue
 import warnings
+import numpy as np
 
 import tkinter as tk
 from tkinter import messagebox
@@ -315,8 +314,6 @@ class SagaDevice(Device):
         if (self._measurement_type == MeasurementType.normal):
             measurement_request = TMSiDevSampleReq()
             measurement_request.SetSamplingMode = 1
-            measurement_request.DisableAutoswitch = 1
-            measurement_request.DisableRepairLogging = 1
             measurement_request.DisableAvrRefCalc = 0
             self._last_error_code = _tmsi_sdk.TMSiSetDeviceSampling(self._device_handle, pointer(measurement_request) )
         else:
@@ -747,50 +744,73 @@ class _ConversionThread(threading.Thread):
         
         self.num_samples_per_set = sampling_thread.num_samples_per_set
         self.sample_conversion = sampling_thread.sample_conversion
-        self._warn_message = True
+        if self.sample_conversion:
+            self._warn_message = True
+        else:
+            self._warn_message = False
+            
+        # sort channels per channel type
+        self._float_chan=[]   
+        self._sensor_chan=[]
+        self._basic_conversion={}
+        for j in range(len(self.channels)):
+            if (self.channels[j].format == 0x0020):
+                self._float_chan.append(j)
+            else:
+                if (self.sample_conversion):
+                    if (self.channels[j].type == ChannelType.AUX) and (self.channels[j].sensor != None):
+                        self._sensor_chan.append(j)
+                    else:
+                        conversion_factor=10**self.channels[j].exp
+                        if not conversion_factor in self._basic_conversion:
+                            self._basic_conversion[conversion_factor]=[j]
+                        else:
+                            self._basic_conversion[conversion_factor].append(j)
         
     def run(self):
         self.sampling = True
         
         if self._warn_message:
             # Initialise a sample counter that keeps track of whether samples might be lost
-            counterval = 0
+            last_counter = 0
         
         while (self.sampling) or (not self.q.empty()):
             while (not self.q.empty()):
                 
                 sample_data_buffer, retrieved_sample_sets = self.q.get()
                 
+                
                 if (retrieved_sample_sets > 0):
-                    samples = []
-                    for i in range (retrieved_sample_sets):
-                        for j in range (self.num_samples_per_set):
-                            # a sample value is of type float (0x1120) or unsigned integer (0x0020)
-                            if (self.channels[j].format == 0x0020):
-                                x = float(float_to_uint(sample_data_buffer[(i * self.num_samples_per_set) + j]))
-                                if self._warn_message:
-                                    if j==(self.num_samples_per_set-1):
-                                        counterstep = x-counterval
-                                        counterval = copy(x);
-                                        if (counterstep > 1) or (counterstep < 1):
-                                            warnings.warn('\n\n!!! \nSomething is wrong, samples might be lost..\n!!!\n', stacklevel = 1)
-                                            self._warn_message = False
-                                
-                            else:
-                                x = sample_data_buffer[(i * self.num_samples_per_set) + j]
-                                if (self.sample_conversion):
-                                    # Convert, when needed, the sample-data of AUX-channels with attached sensors
-                                    if (self.channels[j].type == ChannelType.AUX) and (self.channels[j].sensor != None):
-                                        sensor = self.channels[j].sensor
-                                        x = ((x + sensor.offset) * sensor.gain)/ (10**sensor.exp)
-                                    else:
-                                        # only basic conversion needed
-                                        x = x/(10**self.channels[j].exp)
-                            samples.append(x)
+                    # reshape data to matrix
+                    sample_mat=np.reshape(sample_data_buffer[:self.num_samples_per_set*retrieved_sample_sets], (self.num_samples_per_set, retrieved_sample_sets), order='F')
+                    if (self.sample_conversion):
+                        #basic unit conversion
+                        for conversion_factor in self._basic_conversion.keys():
+                            sample_mat[self._basic_conversion[conversion_factor]]=sample_mat[self._basic_conversion[conversion_factor]]/conversion_factor
+                        #sensor data conversion
+                        for j in self._sensor_chan:
+                            x= sample_mat[j]
+                            sensor = self.channels[j].sensor
+                            x = ((x + sensor.offset) * sensor.gain)/ (10**sensor.exp)
+                            sample_mat[j]=x
+                    
+                    #conversion of float channels
+                    for j in self._float_chan:
+                        sample_mat[j]=float_to_uint(sample_mat[j]) 
+                    
+                    # Check sample counter integrity
+                    if self._warn_message:
+                        counterstep=np.diff(sample_mat[-1])
+                        if not np.all(counterstep==1)or not ((sample_mat[-1,0]-last_counter)==1):
+                            warnings.warn('\n\n!!! \nSomething is wrong, samples might be lost..\n!!!\n', stacklevel = 1)
+                            self._warn_message = False
+                        last_counter=copy(sample_mat[-1,-1])
+                    
+                    samples=sample_mat.flatten('F')
+                    samples=samples.tolist()
                     
                     sd = sample_data.SampleData(retrieved_sample_sets, self.num_samples_per_set, samples )
                     sample_data_server.putSampleData(self._device_handle.value, sd)
-                    
 
             time.sleep(0.010)
         
@@ -799,19 +819,11 @@ class _ConversionThread(threading.Thread):
         
 
 def float_to_uint(f):
-    return struct.unpack('<I', struct.pack('<f', f))[0]
+    fmt_pack='f'*len(f)
+    fmt_unpack='I'*len(f)
+    pack_struct=struct.Struct(fmt_pack)
+    return struct.unpack(fmt_unpack, pack_struct.pack(*list(f)))
 
-if __name__ == '__main__':
-    initialize()
-    dev1 = Device(DsInterfaceType.network, DrInterfaceType.docked)
-    #dev2 = Device(DsInterfaceType.network, DrInterfaceType.docked)
-    dev1.open()
-    print("handle 1 " + str(dev1.info.ds_serial_number))
-    #dev2.open()
-    #print("handle 2 " + str(dev2.info.ds_serial_number))
-
-    #dev2.close()
-    dev1.close()
 
 
 

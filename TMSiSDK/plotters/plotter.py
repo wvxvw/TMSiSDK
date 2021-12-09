@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Plotter object that displays incoming sample data in real-time.
 
-@version: 2021-06-07
-
 '''
 
 from PySide2 import QtWidgets, QtGui, QtCore
@@ -40,8 +38,6 @@ import sys
 from .. import tmsi_device
 from .. import sample_data_server
 from ..plotters.plotter_gui import Ui_MainWindow 
-
-
 from ..device import DeviceInterfaceType, ChannelType
 
 
@@ -110,7 +106,7 @@ class RealTimePlot(QtWidgets.QMainWindow, Ui_MainWindow):
             _checkBox = QtWidgets.QCheckBox(self.device.channels[i].name)
             if i in self._channel_selection:
                 _checkBox.setChecked(True)
-            self._gridbox.addWidget(_checkBox, i%32, np.floor(i/32))
+            self._gridbox.addWidget(_checkBox, i%25, np.floor(i/25))
             _checkBox.clicked.connect(self._update_channel_display)
             
             # Keep track of the checkboxes and the channel type belonging to the checkbox
@@ -617,9 +613,8 @@ class RealTimePlot(QtWidgets.QMainWindow, Ui_MainWindow):
         # Unregister the Consumer from the sample data server. The RealTimeFilter object
         # takes care of this action itself. 
         if not self.filter_app:
-            sample_data_server.unregisterConsumer(self.worker.q_sample_sets)
+            sample_data_server.unregisterConsumer(self.device.id, self.worker.q_sample_sets)
         
-        QtWidgets.QApplication.quit()
 
 class SamplingThread(QtCore.QObject):
     """ Class responsible for sampling and preparing data for the GUI window.
@@ -638,9 +633,7 @@ class SamplingThread(QtCore.QObject):
         self._buffer_size = main_class._buffer_size
         self.samples_seen = main_class.samples_seen
         self.device = main_class.device
-        
         self._downsampling_factor = main_class._downsampling_factor
-        
         self.filter_app=main_class.filter_app
         
         # Register to filter_app or sample data server and start measurement
@@ -730,7 +723,7 @@ class SamplingThread(QtCore.QObject):
                 
                     # Pause the thread for a small time so that plot can be updated before receiving next data chunk
                     # Pause should be long enough to have the screen update itself
-                    time.sleep(0.01)
+                    time.sleep(0.03)
             
     @QtCore.Slot()
     def update_filtered_samples(self): 
@@ -792,7 +785,7 @@ class SamplingThread(QtCore.QObject):
                 
                     # Pause the thread for a small time so that plot can be updated before receiving next data chunk
                     # Pause should be long enough to have the screen update itself
-                    time.sleep(0.01)
+                    time.sleep(0.03)
             
     def stop(self):
         """ Method that is executed when the thread is terminated. 

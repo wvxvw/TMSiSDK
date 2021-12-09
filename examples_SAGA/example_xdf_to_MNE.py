@@ -21,10 +21,28 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-@version: 2021-06-07
+Example : This example shows how to read data from a Xdf-file to an MNE-object. 
 
 '''
 
-from .poly5_file_writer import *
-from .lsl_stream_writer import LSLWriter
+import sys
+sys.path.append("../")
+import mne
 
+from TMSiSDK.file_readers import Xdf_Reader
+
+reader=Xdf_Reader(add_ch_locs=False)
+# When no filename is given, a pop-up window allows you to select the file you want to read. 
+# You can also use reader=Xdf_Reader(full_path) to load a file. Note that the full file path is required here.
+# add_ch_locs can be used to include TMSi EEG channel locations (in case xdf-file does not contain channel locations)
+
+# An XDF-file can consist of multiple streams. The output data is of the tuple type, to allow for multi stream files.
+mne_object, timestamps = reader.data, reader.time_stamps
+
+# Extract data from the first stream
+samples = mne_object[0]._data
+
+
+#%%
+mne_object[0].plot_sensors(ch_type='eeg', show_names=True) 
+mne_object[0].plot(start=0, duration=5, n_channels=5, title='Xdf Plot') 

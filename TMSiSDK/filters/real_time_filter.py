@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Real-time filter that can be applied to incoming data
 
-@version: 2021-06-07
-
 '''
 
 import sys
@@ -187,7 +185,7 @@ class RealTimeFilter:
     def stop(self):
         """ Stop the filter thread and device"""
         self.filter_thread.stop()
-        sample_data_server.unregisterConsumer(self.filter_thread.q_sample_sets)
+        sample_data_server.unregisterConsumer(self.device.id, self.filter_thread.q_sample_sets)
 
 
 class FilterThread(threading.Thread):

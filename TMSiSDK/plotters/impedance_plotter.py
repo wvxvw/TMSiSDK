@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Plotter object that displays impedance values in real-time
 
-@version: 2021-06-07
-
 '''
 
 from os.path import join, dirname, realpath
@@ -35,6 +33,7 @@ import time
 import queue
 import pandas as pd
 import math
+import datetime
 
 import sys
 
@@ -49,19 +48,18 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
     """ Class that creates a GUI to display the impedance values in a gridded
         layout.
     """
-    def __init__(self, figurename, device, layout ='normal', file_storage = None):
+    def __init__(self, figurename, device, layout ='normal', file_storage = False):
         """ Setting up the GUI's elements
         """
         pg.GraphicsLayoutWidget.__init__(self)
         pg.setConfigOptions(antialias = True)
         
-        # Set the minimum size of the GUI so that it can be plotted onto the screen nicely
-        self.setMinimumSize(1500, 900)
-        
         # Pass the device handle to the GUI
         self.device = device
         # Update the title of the Impedance plot
         self.setWindowTitle(figurename)    
+        
+        self._save_impedances = file_storage
         
         print(layout)
         
@@ -76,25 +74,29 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
         """
         # Set view settings
         self.setBackground('w')
+        self.showMaximized()
         
         # Add viewbox for the legend
         self.vb_legend = self.addViewBox()
         legend = pg.LegendItem()
         legend.setParentItem(self.vb_legend)
-        self.vb_legend.setMinimumSize(180,400)
-        self.vb_legend.setMaximumSize(180,400)
         
         # Add plot window for the channels
         self.window = self.addPlot()
-        self.window.setMinimumSize(800,900)
-        self.window.setMaximumSize(800,900)
+
         if layout!='head': 
             self.window.getViewBox().invertY(True)
+            
+            if len(self.device.imp_channels) == 34:
+                self.window.setAspectLocked(lock=True, ratio = 0.6)
+            else: 
+                self.window.setAspectLocked(lock=True, ratio = 1)
+        else:
+            self.window.setAspectLocked(lock=True, ratio = 1)
         
         # Add viewbox for the list of values
         self.vb_list = self.addViewBox()
-        self.vb_list.setMinimumSize(500,900)
-        self.vb_list.setMaximumSize(500,900)
+        self.vb_list.setMaximumSize(500,150000)
         
 
         # Generate the legend by using dummy plots 
@@ -129,10 +131,7 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
             
         if layout=='head':
             #read channel locations
-            dir = dirname(realpath(__file__)) # directory of this file
-            chPath = join(dir, 'resources', 'EEGchannelsTMSi.txt')
-
-            chLocs=pd.read_csv(chPath, sep="\t", header=None)       
+            chLocs=pd.read_csv('../TMSiSDK/_resources/EEGchannelsTMSi.txt', sep="\t", header=None)       
             chLocs.columns=['name', 'radius', 'theta']
             
             #Plot a circle
@@ -186,9 +185,15 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
             # Set the position for each indicator
             for i in range(len(self.device.imp_channels)):
                 if i == 0:
-                    self.spots[i]['pos'] = (3, 8)
+                    if len(self.device.imp_channels)>34:
+                        self.spots[i]['pos'] = (3, 8)
+                    else:
+                        self.spots[i]['pos'] = (3, 4)
                 elif i == len(self.device.imp_channels)-1:
-                    self.spots[i]['pos'] = (4, 8)
+                    if len(self.device.imp_channels) > 34:
+                        self.spots[i]['pos'] = (4, 8)
+                    else:
+                        self.spots[i]['pos'] = (4, 4)
                 elif (i-1) % 8 == 0:
                     row_count += 1
                     self.spots[i]['pos'] = (((i-1)%8), row_count)
@@ -214,7 +219,7 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
             num_column = np.floor(i/list_split_idx)
             value = 5000
             text = f'{self.device.imp_channels[i].name}\t{value:>4}\t{self.device.imp_channels[i].unit_name}'            
-            t_item = pg.TextItem(text, (0, 0, 0), anchor = (-num_column *1.2,-i + list_split_idx * np.floor(i/list_split_idx)))
+            t_item = pg.TextItem(text, (0, 0, 0), anchor = (-num_column *1.2,-i*0.95 + list_split_idx * 0.95 * np.floor(i/list_split_idx)))
             self.text_items.append(t_item)
             self.vb_list.addItem(t_item)
             
@@ -315,7 +320,7 @@ class ImpedancePlot(pg.GraphicsLayoutWidget):
         self.thread.terminate()
         self.thread.wait()
         
-        sample_data_server.unregisterConsumer(self.worker.q_sample_sets)
+        sample_data_server.unregisterConsumer(self.device.id, self.worker.q_sample_sets)
         
         QtWidgets.QApplication.quit()
 
@@ -328,6 +333,7 @@ class SamplingThread(QtCore.QObject):
         QtCore.QObject.__init__(self)
         # Access initialised values from the GUI class
         self.device = main_class.device
+        self._save_impedances = main_class._save_impedances
         
         # Prepare Queue
         self.q_sample_sets = queue.Queue(1000)
@@ -355,6 +361,7 @@ class SamplingThread(QtCore.QObject):
             
                 # Use the final measured impedance value and convert to integer value
                 impedance_values = [int(x) for x in sample_set.samples]
+                self.impedance_values = impedance_values
 
                 # Output sample data
                 self.output.emit(impedance_values)
@@ -368,9 +375,21 @@ class SamplingThread(QtCore.QObject):
             the device.
         """
         self.device.stop_measurement()
-        #self.device.close()
         self.sampling = False
-
+        
+        if self._save_impedances:
+            store_imp = []
+            
+            for i in range(len(self.impedance_values)):
+                store_imp.append(f"{self.device.imp_channels[i].name}\t{self.impedance_values[i]}\t{self.device.imp_channels[i].unit_name}")
+    
+            now = datetime.datetime.now()
+            filetime = now.strftime("%Y%m%d_%H%M%S")
+            filename = 'Impedances_' + filetime
+            
+            with open('../measurements/' + filename + '.txt', 'w') as f:
+                for item in store_imp:
+                    f.write(item + "\n")
 
 if __name__ == "__main__":
     # Initialise the TMSi-SDK first before starting using it

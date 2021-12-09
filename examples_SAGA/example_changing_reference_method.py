@@ -23,9 +23,11 @@ limitations under the License.
 
 Example : This example shows how to change the applied reference method. 
             The configurable options are ReferenceMethod.common and 
-            ReferenceMethod.average
-            
-@version: 2021-06-07
+            ReferenceMethod.average. In case of common reference, the reference 
+            switch method can be set to ReferenceSwitch.fixed or ReferenceSwitch.auto.
+            In case of ReferenceSwitch.auto, reference method automatically 
+            swithces to average reference when the common reference signal is
+            out of range
 
 '''
 import sys
@@ -35,7 +37,7 @@ import time
 
 from TMSiSDK import tmsi_device
 from TMSiSDK.error import TMSiError, TMSiErrorCode, DeviceErrorLookupTable
-from TMSiSDK.device import DeviceInterfaceType, ChannelType, ReferenceMethod, DeviceState
+from TMSiSDK.device import DeviceInterfaceType, ChannelType, ReferenceMethod, ReferenceSwitch, DeviceState
 from TMSiSDK.file_writer import FileWriter, FileFormat
 
 try:
@@ -52,9 +54,11 @@ try:
     dev.config.base_sample_rate = 4000
     dev.config.set_sample_rate(ChannelType.all_types, 4)
     
-    # Specify the reference method that is used for sampling
-    dev.config.reference_method = ReferenceMethod.common
-
+    # Specify the reference method and reference switch method that are used during sampling 
+    # ReferenceMethod: average or common
+    # ReferenceSwitch: fixed or auto
+    dev.config.reference_method = ReferenceMethod.common,ReferenceSwitch.fixed
+    
     # Retrieve the channel list from the device
     ch_list = dev.config.channels
     
@@ -77,7 +81,7 @@ try:
     # then 'link' the file-writer-instance to the device.
     # The file-writer-object is now ready to capture the measurement-data and
     # write it to the specified file.
-    file_writer = FileWriter(FileFormat.poly5, "./measurements/changed_reference_method_measurement.poly5")
+    file_writer = FileWriter(FileFormat.poly5, "../measurements/changed_reference_method_measurement.poly5")
     file_writer.open(dev)
 
     # Start the measurement and wait 10 seconds. In the mean time the file-writer-instance

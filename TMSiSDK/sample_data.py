@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Sample data class definitions
 
-@version: 2021-06-07
-
 '''
 
 class SampleSet:

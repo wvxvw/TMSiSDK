@@ -23,11 +23,10 @@ limitations under the License.
 
 TMSiSDK: Sample Data Server module
 
-@version: 2021-06-07
-
 '''
 
 from . import settings
+from copy import copy
 
 class SampleDataConsumer:
     """ Local class which identifies which consumer registered for what device
@@ -50,19 +49,25 @@ def registerConsumer(id, q):
     """
     settings._consumer_list.append(SampleDataConsumer(id, q))
 
-def unregisterConsumer(q):
+def unregisterConsumer(id, q):
     """ Unregisters a consumer-queue associated with a file-writer or plotter 
         object. 
         This method is called by close-methods of the sample-data-consumers. 
         
         Args:
+            id: <int> : Unique id of a device <Device.id>.
+                Indicates from which specific device, received sample-data
+                must be put into the registered <queue>
+            
             q: <queue> The queue object which has to be removed from the global
                 consumer list.
     """
     num_consumers = len(settings._consumer_list)
     for i in range(num_consumers):
-        if settings._consumer_list[i].q == q:
-            settings._consumer_list.pop(i)
+        if settings._consumer_list[i].id == id: 
+            if settings._consumer_list[i].q == q:
+                idx_remove = copy(i)
+    settings._consumer_list.pop(idx_remove)
 
 def putSampleData(id, data):
     """ Puts a <SampleData>-object, coming from device <Device.id> into the queues

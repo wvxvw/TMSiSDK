@@ -23,8 +23,6 @@ limitations under the License.
 
 Example : This example shows how to read data from a Poly5-file. 
 
-@version: 2021-06-07
-
 '''
 import sys
 sys.path.append("../")

@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK : General sdk types
 
-@version: 2021-06-07
-
 '''
 from enum import Enum, unique
 

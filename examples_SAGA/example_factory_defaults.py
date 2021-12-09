@@ -24,8 +24,6 @@ limitations under the License.
 Example : This example shows how to initiate a factory reset of the SAGA 
             device. 
 
-@version: 2021-06-07
-
 '''
 import sys
 sys.path.append("../")

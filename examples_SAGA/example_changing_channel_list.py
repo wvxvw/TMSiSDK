@@ -24,8 +24,6 @@ limitations under the License.
 Example : This example shows the manipulation of the active channel list and 
             demonstrates how the ChannelName property can be changed.
 
-@version: 2021-06-07
-
 '''
 import sys
 sys.path.append("../")

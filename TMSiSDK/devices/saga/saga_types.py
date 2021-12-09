@@ -23,10 +23,8 @@ limitations under the License.
 
 TMSiSDK: SAGA Device Types 
 
-@version: 2021-06-07
-
 '''
-from ...device import DeviceInterfaceType, DeviceState, DeviceConfig, ChannelType, DeviceChannel, DeviceSensor
+from ...device import DeviceInterfaceType, DeviceState, DeviceConfig, ChannelType, DeviceChannel, DeviceSensor, ReferenceMethod, ReferenceSwitch
 
 _TMSI_DEVICE_ID_NONE = 0xFFFF
 
@@ -61,7 +59,7 @@ class SagaConfig(DeviceConfig):
         self._configured_interface = DeviceInterfaceType.none
         self._triggers = 0 # 0= Disabled, 1= external triggers enabled
         self._reference_method = 0 # 0= Common reference, 1=average reference
-        self._auto_reference_method = 0 # 0= fixed method, 1= if average -> common
+        self._auto_reference_method = 0 #  0= fixed method, 1= autoswitch to average reference when CREF is out of range
         self._dr_sync_out_divider = -1 # SetBaseSampleRateHz/SyncOutDiv, -1 = marker button
         self._dr_sync_out_duty_cycle = 0 # DR Sync dutycycle
         self._repair_logging = 0 # 0 = Disabled, 1 = BackupLogging enabled,
@@ -112,8 +110,10 @@ class SagaConfig(DeviceConfig):
                     # Only update the chan_divider of active channels
                     if (ch.chan_divider != -1):
                         ch.chan_divider = bsr_shift
-        if (self._parent != None):
-            self._parent._update_config()
+            if (self._parent != None):
+                self._parent._update_config()
+        else:
+            print('\nProvided base_sample_rate_divider is invalid. Sample rate can not be updated.\n')
 
     @property
     def base_sample_rate(self):
@@ -134,11 +134,18 @@ class SagaConfig(DeviceConfig):
 
             It is advised to "refresh" the applications' local "variables"
             after the base-sample-rate has been updated.
+            
         """
         if (var == 4000) or (var == 4096):
-            self._base_sample_rate = var
-            if (self._parent != None):
-                self._parent._update_config()
+            if self._base_sample_rate != var:
+                # The device does not support a configuration with different base 
+                # sample rates for sample rate and sync out. Hence sync out config
+                # has to be update as well
+                sync_out_freq=(self._base_sample_rate/self._dr_sync_out_divider)
+                self._base_sample_rate = var
+                self.set_sync_out_config(freq=sync_out_freq)
+        else:
+            print('\nProvided base_sample_rate is invalid. Sample rate can not be updated.\n')
 
     @property
     def sample_rate(self):
@@ -233,8 +240,9 @@ class SagaConfig(DeviceConfig):
             
     @property
     def reference_method(self):
-        """ 'ReferenceMethod' the reference method applied to the UNI channels"""
-        return self._reference_method
+        """ 'ReferenceMethod' the reference method applied to the UNI channels,
+        'ReferenceSwitch' the switching of reference mode when common reference is disconnected"""
+        return ReferenceMethod(self._reference_method).name,  ReferenceSwitch(self._auto_reference_method).name
     
     @reference_method.setter
     def reference_method(self, reference_type):
@@ -243,11 +251,69 @@ class SagaConfig(DeviceConfig):
         Args:
             reference_type: 'ReferenceMethod' the type of reference method that
             should be used for measuring the UNI channels
+            'ReferenceSwitch' the switching of reference mode when common reference is disconnected
         
         """
-        self._reference_method = reference_type.value
+        if not type(reference_type) is tuple:
+            if isinstance(reference_type, ReferenceMethod):
+                self._reference_method=reference_type.value
+            elif isinstance(reference_type, ReferenceSwitch):
+                self._auto_reference_method=reference_type.value
+               
+        else:
+            for ind in range(len(reference_type)):
+                if isinstance(reference_type[ind], ReferenceMethod):
+                    self._reference_method=reference_type[ind].value
+                elif isinstance(reference_type[ind], ReferenceSwitch):
+                    self._auto_reference_method=reference_type[ind].value
+
         if (self._parent != None):
             self._parent._update_config()
+            
+    @property
+    def triggers(self):
+        """'Boolean', true when triggers are enabled or false when disabled"""
+        return bool(self._triggers)
+    
+    @triggers.setter
+    def triggers(self, enable_triggers):
+        """Sets the triggers to enabled or disabled"""
+        self._triggers=enable_triggers
+        if (self._parent != None):
+            self._parent._update_config()
+        
+    @property
+    def repair_logging(self):
+        """Boolean, true in case samples are logged on Recorder for repair in case of data loss"""
+        return self._repair_logging
+    
+    @repair_logging.setter
+    def repair_logging(self, enable_logging):
+        """Sets repair logging to enabled or disabled"""
+        self._repair_logging=enable_logging
+        if (self._parent != None):
+            self._parent._update_config()
+    
+    def get_sync_out_config(self):
+        """Sync out configuration, shows whether sync out is in marker mode or square wave mode with corresponding frequency and duty cycle"""
+        if self._dr_sync_out_divider==-1:
+            freq=-1
+        else:
+            freq=(self._base_sample_rate/self._dr_sync_out_divider)
+        return self._dr_sync_out_divider==-1, freq, self._dr_sync_out_duty_cycle/10
+    
+    def set_sync_out_config(self, marker=False, freq=None, duty_cycle=None):
+        """Set sync out to marker mode or square wave mode with corresponding frequency and duty cycle"""
+        if marker:
+            self._dr_sync_out_divider=-1
+        else:
+            if freq:
+                self._dr_sync_out_divider=round(self._base_sample_rate/freq)
+            if duty_cycle:
+                self._dr_sync_out_duty_cycle=duty_cycle*10
+                
+        if (self._parent != None):
+            self._parent._update_config()  
 
 class SagaSensor():
     """ <SagaSensor> represents the sensor-data of a channel. It has the next properties:

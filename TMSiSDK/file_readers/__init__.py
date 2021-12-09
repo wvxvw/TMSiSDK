@@ -21,8 +21,7 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-@version: 2021-06-07
-
 '''
 
 from .poly5reader import Poly5Reader
+from .xdf_reader import Xdf_Reader

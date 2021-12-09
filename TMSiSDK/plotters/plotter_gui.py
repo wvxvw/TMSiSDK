@@ -23,16 +23,8 @@ limitations under the License.
 
 TMSiSDK: GUI window used by the real-time sample data plotter
 
-@version: 2021-06-07
 
 '''
-################################################################################
-## Form generated from reading UI file 'plotter_gui.ui'
-##
-## Created by: Qt User Interface Compiler version 5.15.2
-##
-## WARNING! All changes made in this file will be lost when recompiling UI file!
-################################################################################
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -50,30 +42,48 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout = QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.RealTimePlotWidget = GraphicsLayoutWidget(self.centralwidget)
-        self.RealTimePlotWidget.setObjectName(u"RealTimePlotWidget")
+        self.channel_list_groupbox = QGroupBox(self.centralwidget)
+        self.channel_list_groupbox.setObjectName(u"channel_list_groupbox")
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.channel_list_groupbox.sizePolicy().hasHeightForWidth())
+        self.channel_list_groupbox.setSizePolicy(sizePolicy)
+        self.channel_list_groupbox.setMinimumSize(QSize(100, 0))
+        self.channel_list_groupbox.setMaximumSize(QSize(400, 16777215))
+        font = QFont()
+        font.setBold(False)
+        font.setWeight(50)
+        self.channel_list_groupbox.setFont(font)
 
-        self.gridLayout.addWidget(self.RealTimePlotWidget, 0, 1, 1, 3)
-
-        self.autoscale_button = QPushButton(self.centralwidget)
-        self.autoscale_button.setObjectName(u"autoscale_button")
-
-        self.gridLayout.addWidget(self.autoscale_button, 2, 3, 1, 1)
-
-        self.decrease_time_button = QPushButton(self.centralwidget)
-        self.decrease_time_button.setObjectName(u"decrease_time_button")
-
-        self.gridLayout.addWidget(self.decrease_time_button, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.channel_list_groupbox, 0, 0, 1, 1)
 
         self.increase_time_button = QPushButton(self.centralwidget)
         self.increase_time_button.setObjectName(u"increase_time_button")
 
-        self.gridLayout.addWidget(self.increase_time_button, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.increase_time_button, 3, 2, 1, 1)
+
+        self.autoscale_button = QPushButton(self.centralwidget)
+        self.autoscale_button.setObjectName(u"autoscale_button")
+
+        self.gridLayout.addWidget(self.autoscale_button, 3, 3, 1, 1)
+
+        self.decrease_time_button = QPushButton(self.centralwidget)
+        self.decrease_time_button.setObjectName(u"decrease_time_button")
+
+        self.gridLayout.addWidget(self.decrease_time_button, 3, 1, 1, 1)
+
+        self.RealTimePlotWidget = GraphicsLayoutWidget(self.centralwidget)
+        self.RealTimePlotWidget.setObjectName(u"RealTimePlotWidget")
+
+        self.gridLayout.addWidget(self.RealTimePlotWidget, 0, 1, 3, 3)
 
         self.gridLayout_2 = QGridLayout()
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.hide_UNI_button = QPushButton(self.centralwidget)
         self.hide_UNI_button.setObjectName(u"hide_UNI_button")
+        self.hide_UNI_button.setMaximumSize(QSize(100, 16777215))
+        self.hide_UNI_button.setLayoutDirection(Qt.RightToLeft)
 
         self.gridLayout_2.addWidget(self.hide_UNI_button, 0, 1, 1, 1)
 
@@ -90,6 +100,7 @@ class Ui_MainWindow(object):
 
         self.hide_BIP_button = QPushButton(self.centralwidget)
         self.hide_BIP_button.setObjectName(u"hide_BIP_button")
+        self.hide_BIP_button.setLayoutDirection(Qt.RightToLeft)
 
         self.gridLayout_2.addWidget(self.hide_BIP_button, 1, 1, 1, 1)
 
@@ -105,27 +116,18 @@ class Ui_MainWindow(object):
 
         self.hide_AUX_button = QPushButton(self.centralwidget)
         self.hide_AUX_button.setObjectName(u"hide_AUX_button")
+        self.hide_AUX_button.setLayoutDirection(Qt.RightToLeft)
 
         self.gridLayout_2.addWidget(self.hide_AUX_button, 2, 1, 1, 1)
 
         self.hide_DIGI_button = QPushButton(self.centralwidget)
         self.hide_DIGI_button.setObjectName(u"hide_DIGI_button")
+        self.hide_DIGI_button.setLayoutDirection(Qt.RightToLeft)
 
         self.gridLayout_2.addWidget(self.hide_DIGI_button, 3, 1, 1, 1)
 
 
         self.gridLayout.addLayout(self.gridLayout_2, 2, 0, 1, 1)
-
-        self.channel_list_groupbox = QGroupBox(self.centralwidget)
-        self.channel_list_groupbox.setObjectName(u"channel_list_groupbox")
-        self.channel_list_groupbox.setMinimumSize(QSize(100, 700))
-        self.channel_list_groupbox.setMaximumSize(QSize(200, 16777215))
-        font = QFont()
-        font.setBold(False)
-        font.setWeight(50)
-        self.channel_list_groupbox.setFont(font)
-
-        self.gridLayout.addWidget(self.channel_list_groupbox, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
@@ -143,9 +145,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.channel_list_groupbox.setTitle(QCoreApplication.translate("MainWindow", u"Channel list", None))
+        self.increase_time_button.setText(QCoreApplication.translate("MainWindow", u"Increase time range", None))
         self.autoscale_button.setText(QCoreApplication.translate("MainWindow", u"Auto Scale", None))
         self.decrease_time_button.setText(QCoreApplication.translate("MainWindow", u"Decrease time range", None))
-        self.increase_time_button.setText(QCoreApplication.translate("MainWindow", u"Increase time range", None))
         self.hide_UNI_button.setText(QCoreApplication.translate("MainWindow", u"Hide UNI", None))
         self.show_BIP_button.setText(QCoreApplication.translate("MainWindow", u"Show BIP", None))
         self.show_UNI_button.setText(QCoreApplication.translate("MainWindow", u"Show UNI", None))
@@ -154,6 +157,5 @@ class Ui_MainWindow(object):
         self.show_DIGI_button.setText(QCoreApplication.translate("MainWindow", u"Show DIGI", None))
         self.hide_AUX_button.setText(QCoreApplication.translate("MainWindow", u"Hide AUX", None))
         self.hide_DIGI_button.setText(QCoreApplication.translate("MainWindow", u"Hide DIGI", None))
-        self.channel_list_groupbox.setTitle(QCoreApplication.translate("MainWindow", u"Channel list", None))
     # retranslateUi
 

@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK : Starting module to instantiate <Device>-objects of TMSi measurement systems
 
-@version: 2021-06-07
-
 '''
 
 from enum import Enum

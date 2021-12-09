@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Main Device Interface
 
-@version: 2021-06-07
-
 '''
 
 from enum import Enum, unique
@@ -65,6 +63,11 @@ class MeasurementType(Enum):
 class ReferenceMethod(Enum):
     common = 0
     average = 1
+
+@unique
+class ReferenceSwitch(Enum):
+    fixed=0
+    auto=1
 
 class DeviceChannel:
     """ 'DeviceChannel' represents a device channel. It has the next properties:

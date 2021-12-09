@@ -21,21 +21,18 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-Example : This example shows how to change the interface between SAGA's Docking
-            Station and Data Recorder. 
-
-@version: 2021-06-07
+Example : This example shows how to load/save several different configurations 
+            from/to a file (in the “configs” directory). 
 
 '''
 import sys
 sys.path.append("../")
 
-import time
 
 from TMSiSDK import tmsi_device
+from TMSiSDK.device import DeviceInterfaceType, ChannelType, DeviceState
 from TMSiSDK.error import TMSiError, TMSiErrorCode, DeviceErrorLookupTable
-from TMSiSDK.device import DeviceInterfaceType, DeviceState
-from TMSiSDK.file_writer import FileWriter, FileFormat
+from TMSiSDK import get_config
 
 try:
     # Initialize the TMSi-SDK first before starting using it
@@ -46,51 +43,33 @@ try:
 
     # Find and open a connection to the SAGA-system
     dev.open()
-    
-    # Choose the desired DR-DS interface type 
-    dev.config.set_interface_type(DeviceInterfaceType.optical)
-    
-    # Close the connection to the device (with the original interface type)
-    dev.close()
-    
-    # Wait for a bit while the connection is closed
-    time.sleep(1)
-    
-    # Create the device object with the new interface type
-    dev = tmsi_device.create(tmsi_device.DeviceType.saga, DeviceInterfaceType.optical, DeviceInterfaceType.usb)
-    
-    # Find and open the connection to the SAGA-system
-    dev.open()
 
+    # Upload a configuration from file to the device and print the active channel list
+    # of this configuration
+    print('Loading a configuration with one active UNI-channel : \n')
+    if dev.config.num_channels<64:
+        cfg = get_config("saga_config_minimal32")
+    else:
+        cfg = get_config("saga_config_minimal")
+    dev.load_config(cfg)
+    
+    for idx, ch in enumerate(dev.channels):
+         print('[{0}] : [{1}] in [{2}]'.format(idx, ch.name, ch.unit_name))
+
+    # Enable all UNI-channels, print the updated active channel list and save the new configuration to file
+    print('\nActivate all UNI-channels : and save the configuration to the file [..\\TMSiSDK\\configs\\saga_config_current.xml]')
     ch_list = dev.config.channels
-    
     for idx, ch in enumerate(ch_list):
-        ch.enabled = True
+        if (ch.type == ChannelType.UNI):
+            ch.enabled = True
+        else :
+            ch.enabled = False
     dev.config.channels = ch_list
+    for idx, ch in enumerate(dev.channels):
+         print('[{0}] : [{1}] in [{2}]'.format(idx, ch.name, ch.unit_name))
 
-    # Before the measurement starts first a file-writer-object must be created and opened.
-    # Upon creation specify :
-    #   - the data-format 'poly5' to be used
-    #   - the filepath/name, where the file must be stored
-    # then 'link' the file-writer-instance to the device.
-    # The file-writer-object is now ready to capture the measurement-data and
-    # write it to the specified file.
-    file_writer = FileWriter(FileFormat.poly5, "./measurements/switched_interface_type_measurement.poly5")
-    file_writer.open(dev)
-
-    # Start the measurement and wait 10 seconds. In the mean time the file-writer-instance
-    # will capture the sampling data and store it into the specified file in the 'poly5'-data format.
-    dev.start_measurement()
-
-    # Wait for 10 seconds
-    time.sleep(10)
-
-    # Stop the measurement
-    dev.stop_measurement()
-
-    # Close the file-writer-instance.
-    # The sample-data of the measurement has been archived into the specified file.
-    file_writer.close()
+    print('\nSave the configuration to the file [..\\TMSiSDK\\configs\\saga_config_current.xml]')
+    dev.save_config(get_config("saga_config_current"))
 
     # Close the connection to the SAGA-system
     dev.close()

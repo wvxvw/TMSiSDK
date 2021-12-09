@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: SAGA Device API protocol definitions VERSION 1.4
 
-@version: 2021-06-07
-
 '''
 
 from ctypes import *

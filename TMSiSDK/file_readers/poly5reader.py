@@ -23,8 +23,6 @@ limitations under the License.
 
 TMSiSDK: Poly5 File Reader
 
-@version: 2021-06-07
-
 '''
 import numpy as np
 import struct
@@ -33,7 +31,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 class Poly5Reader: 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, readAll = True):
         if filename==None:
             root = tk.Tk()
 
@@ -41,36 +39,56 @@ class Poly5Reader:
             root.withdraw()
             
         self.filename = filename
+        self.readAll = readAll
         print('Reading file ', filename)
         self._readFile(filename)
         
     def _readFile(self, filename):
         try:
-            f = open(filename, "rb")
+            self.file_obj = open(filename, "rb")
+            file_obj = self.file_obj
             try:    
-                self._readHeader(f)
-                self.channels=self._readSignalDescription(f)
+                self._readHeader(file_obj)
+                self.channels = self._readSignalDescription(file_obj)
+                self._myfmt = 'f' * self.num_channels*self.num_samples_per_block
+                self._buffer_size = self.num_channels*self.num_samples_per_block
                 
-                sample_buffer=np.zeros(self.num_channels*self.num_samples)
- 
-                for i in range(self.num_data_blocks):
-                    print('\rProgress: % 0.1f %%' %(100*i/self.num_data_blocks), end="\r")
-                    i_start=i*self.num_data_blocks+1;
-                    i_end=min((i+1)*self.num_data_blocks, self.num_samples)
-                    data_block=self._readSignalBlock(f, i_end - i_start + 1)
-                    i1=i*self.num_samples_per_block*self.num_channels
-                    i2=(i+1)*self.num_samples_per_block*self.num_channels
-                    np.put(sample_buffer, range(i1, i2),data_block)
-                   
-                samples=np.transpose(np.reshape(sample_buffer, [self.num_samples_per_block*(i+1), self.num_channels]))
-                self.samples=samples
-                print('Done reading data.')
-                f.close()
+                if self.readAll:
+                    sample_buffer = np.zeros(self.num_channels * self.num_samples)
+     
+                    for i in range(self.num_data_blocks):
+                        print('\rProgress: % 0.1f %%' %(100*i/self.num_data_blocks), end="\r")
+                        data_block = self._readSignalBlock(file_obj, self._buffer_size, self._myfmt) 
+                        i1 = i * self.num_samples_per_block * self.num_channels
+                        i2 = (i+1) * self.num_samples_per_block * self.num_channels
+                        sample_buffer[i1:i2] = data_block
+                       
+                    samples=np.transpose(np.reshape(sample_buffer, [self.num_samples_per_block*(i+1), self.num_channels]))
+                    self.samples=samples
+                    print('Done reading data.')
+                    self.file_obj.close()
             except:
                 print('Reading data failed.')
         except:
             print('Could not open file. ')
         
+        
+    def readSamples(self, n_blocks = None):
+        "Function to read a subset of sample blocks from a file"
+        if n_blocks==None:
+            n_blocks = self.num_data_blocks
+            
+        sample_buffer = np.zeros(self.num_channels*n_blocks*self.num_samples_per_block)
+     
+        for i in range(n_blocks):
+            data_block = self._readSignalBlock(self.file_obj, self._buffer_size, self._myfmt)
+            i1 = i * self.num_samples_per_block * self.num_channels
+            i2 = (i+1) * self.num_samples_per_block * self.num_channels
+            sample_buffer[i1:i2] = data_block
+        
+        samples = np.transpose(np.reshape(sample_buffer, [self.num_samples_per_block*(i+1), self.num_channels]))
+        return samples
+    
             
     def _readHeader(self, f):
         header_data=struct.unpack("=31sH81phhBHi4xHHHHHHHiHHH64x", f.read(217))
@@ -106,13 +124,15 @@ class Poly5Reader:
         
             
     
-    def _readSignalBlock(self, f, n):
+    def _readSignalBlock(self, f, buffer_size, myfmt):
         f.read(86)
-        buffer_size=self.num_channels*self.num_samples_per_block
         sampleData=f.read(buffer_size*4)
-        DataBlock=struct.unpack((str(buffer_size) + 'f'), sampleData)
-        SignalBlock=np.asarray(DataBlock)
+        DataBlock = struct.unpack(myfmt, sampleData)
+        SignalBlock = np.asarray(DataBlock)
         return SignalBlock
+    
+    def close(self):
+        self.file_obj.close()
         
 
 class Channel:

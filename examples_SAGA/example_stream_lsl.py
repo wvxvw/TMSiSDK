@@ -21,12 +21,7 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-Example : This example shows how to couple an additional signal processing object
-            to the plotter. The application of a bandpass filter on the first 
-            24 UNI channels is demonstrated. The filter is only applied to the 
-            plotter, the saved data does not contain any filtered data. 
-
-@version: 2021-06-07
+Example : This example shows the functionality to stream to LSL.
 
 '''
 
@@ -34,14 +29,13 @@ import sys
 sys.path.append("../")
 
 from PySide2 import QtWidgets
-import numpy as np
 
 from TMSiSDK import tmsi_device
 from TMSiSDK import plotters
-from TMSiSDK.device import DeviceInterfaceType, ChannelType, DeviceState
-from TMSiSDK.error import TMSiError, TMSiErrorCode, DeviceErrorLookupTable
+from TMSiSDK.device import DeviceInterfaceType, DeviceState
 from TMSiSDK.file_writer import FileWriter, FileFormat
-from TMSiSDK import filters
+from TMSiSDK.error import TMSiError, TMSiErrorCode, DeviceErrorLookupTable
+
 
 
 try:
@@ -52,40 +46,7 @@ try:
     dev = tmsi_device.create(tmsi_device.DeviceType.saga, DeviceInterfaceType.docked, DeviceInterfaceType.usb)
     
     # Find and open a connection to the SAGA-system and print its serial number
-    dev.open()
-    
-    # Set the sample rate to 500 Hz
-    dev.config.base_sample_rate = 4000
-    dev.config.set_sample_rate(ChannelType.all_types, 8)
-    
-    # Enable UNI channels 1 to 24
-    UNI_list = np.arange(1,25)
-    
-    # Retrieve all channels from the device and update which should be enabled
-    ch_list = dev.config.channels
-    
-    #Initialise counter per channel type
-    UNI_count = 0
-   
-    for idx, ch in enumerate(ch_list):
-        if (ch.type == ChannelType.UNI):
-            if UNI_count in UNI_list:
-                ch.enabled = True
-            else:
-                ch.enabled = False
-            UNI_count += 1
-        else :
-            ch.enabled = False
-    dev.config.channels = ch_list
-    
-    # Initialise a file-writer class (Poly5-format) and state its file path
-    file_writer = FileWriter(FileFormat.poly5, "./measurements/example_filter_and_plot.poly5")
-    # Define the handle to the device
-    file_writer.open(dev)
-    
-    # Initialise filter
-    filter_appl = filters.RealTimeFilter(dev)
-    filter_appl.generateFilter(Fc_hp=5, Fc_lp=100)
+    dev.open()  
     
     # Check if there is already a plotter application in existence
     plotter_app = QtWidgets.QApplication.instance()
@@ -94,21 +55,28 @@ try:
     if not plotter_app:
         plotter_app = QtWidgets.QApplication(sys.argv)
     
-    # Define the GUI object and show it
+    # Initialise the lsl-stream
+    stream = FileWriter(FileFormat.lsl, "SAGA")
+    
+    # Define the handle to the device
+    stream.open(dev)
+
+    # Define the GUI object and show it 
+    # The channel selection argument states which channels need to be displayed initially by the GUI
     plot_window = plotters.RealTimePlot(figurename = 'A RealTimePlot', 
                                         device = dev, 
-                                        channel_selection = [0, 1, 2], 
-                                        filter_app = filter_appl)
+                                        channel_selection = [0,1,2])
     plot_window.show()
     
     # Enter the event loop
     plotter_app.exec_()
     
-    # Delete the Plotter application
+    # Quit and delete the Plotter application
+    QtWidgets.QApplication.quit()
     del plotter_app
     
     # Close the file writer after GUI termination
-    file_writer.close()
+    stream.close()
     
     # Close the connection to the SAGA device
     dev.close()
@@ -116,7 +84,7 @@ try:
 except TMSiError as e:
     print("!!! TMSiError !!! : ", e.code)
     if (e.code == TMSiErrorCode.device_error) :
-        print("  => device error : 0x", hex(dev.status.error))
+        print("  => device error : ", hex(dev.status.error))
         DeviceErrorLookupTable(hex(dev.status.error))
         
 finally:

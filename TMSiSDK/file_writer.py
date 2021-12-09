@@ -23,21 +23,19 @@ limitations under the License.
 
 TMSiSDK: File Writer Interface
 
-@version: 2021-06-07
-
 '''
 
 from enum import Enum
 
 from .error import TMSiError, TMSiErrorCode
-from . import file_formats
+
 
 class FileFormat(Enum):
     none = 0
     poly5 = 1
-    edfplus = 2
-    gdf = 3
-    lsl = 4
+    xdf = 2
+    lsl = 3
+    
 
 class FileWriter:
     """ <FileWriter> implements a file-writer for writing sample-data, captured
@@ -50,13 +48,19 @@ class FileWriter:
             filename : <string> The path and name of the file, into which the
             measurement-data must be written.
     """
-    def __init__(self, data_format_type, filename):
+    def __init__(self, data_format_type, filename, add_ch_locs=False):
         if (data_format_type == FileFormat.poly5):
+            from .file_formats.poly5_file_writer import Poly5Writer
             self._data_format_type = data_format_type
-            self._file_writer = file_formats.Poly5Writer(filename)
-        if (data_format_type == FileFormat.lsl):
+            self._file_writer = Poly5Writer(filename)
+        elif (data_format_type == FileFormat.xdf):
+            from .file_formats.xdf_file_writer import XdfWriter
             self._data_format_type = data_format_type
-            self._file_writer = file_formats.LSLWriter(filename)
+            self._file_writer = XdfWriter(filename, add_ch_locs)
+        elif (data_format_type == FileFormat.lsl):
+            from .file_formats.lsl_stream_writer import LSLWriter
+            self._data_format_type = data_format_type
+            self._file_writer = LSLWriter(filename)
         else:
             print("Unsupported data format")
             raise TMSiError(TMSiErrorCode.api_incorrect_argument)

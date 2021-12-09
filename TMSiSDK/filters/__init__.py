@@ -21,8 +21,6 @@ limitations under the License.
    #     #     #        #  #  #     #       # #
    #     #     #  #####    #  ######   #     #     #
 
-@version: 2021-06-07
-
 '''
 
 from .real_time_filter import RealTimeFilter
